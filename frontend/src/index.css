@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-ink: #0b1220;
+  --color-ink-soft: #4b5568;
+
+  --color-navy-950: #090d17;
+  --color-navy-900: #0b1120;
+  --color-navy-800: #131b2e;
+  --color-navy-700: #1c2740;
+  --color-navy-600: #2a3654;
+
+  --color-surface: #ffffff;
+  --color-bg: #f5f6f8;
+  --color-bg-subtle: #eceef2;
+  --color-border: #e2e5eb;
+
+  --color-accent: #0891b2;
+  --color-accent-600: #0e7490;
+  --color-accent-soft: #e6f7fa;
+
+  --color-success: #16a34a;
+  --color-success-soft: #eafaf0;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef6e7;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fdecec;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent-600);
+}
+
+/* thin scrollbars for the operational feel */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-navy-600) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #c7cbd4;
+  border-radius: 4px;
+}
