@@ -1,161 +1,177 @@
-# ResolveAI
+# ResolveAI — AI-Powered Merchant Incident Resolution Agent
 
-AI-Powered Merchant Incident Resolution Agent
+ResolveAI is an AI-powered merchant support and incident resolution system designed to investigate payment issues, remember previous conversations, identify probable root causes, and safely resolve incidents.
 
-## Current Phase
+## 🚀 Current Progress
 
-**Phase 1 — Project Setup.** Infrastructure and UI only. No AI, no real payment
-data, no tool-calling. See `PROJECT_SPEC.md` for the full product vision.
+### Backend Foundation
 
-## Tech Stack
+* ✅ React + Vite frontend setup
+* ✅ Node.js + Express backend
+* ✅ MongoDB Atlas integration
+* ✅ Transaction model
+* ✅ Order model
+* ✅ Event model
+* ✅ Mock payment data
+* ✅ Transaction API
+* ✅ Order API
+* ✅ Webhook API
+* ✅ Webhook replay action
 
-**Frontend:** React + Vite + Tailwind CSS
-**Backend:** Node.js + Express
-**Database:** MongoDB Atlas (via Mongoose)
+### Incident & Memory System
 
-## Architecture
+* ✅ Incident system
+* ✅ Conversation system
+* ✅ Message memory
+* ✅ Active incident tracking
+* ✅ Conversation memory retrieval
+* ✅ Incident-to-conversation linking
 
-```
-React (frontend)  →  Express API (backend)  →  MongoDB Atlas
-```
+## 🧠 Current Architecture
 
-The frontend never talks to MongoDB directly. Only the Express backend holds
-the database connection string.
-
-## Project structure
-
-```
-resolve-ai/
-├── frontend/     React + Vite + Tailwind — the incident workspace UI
-├── backend/      Express + Mongoose — API and DB connection
-├── .gitignore
-├── README.md
-└── PROJECT_SPEC.md
-```
-
-## Current Features
-
-* Premium merchant incident-workspace UI (static demo data)
-* React/Vite frontend with Tailwind CSS
-* Express backend
-* MongoDB Atlas connection foundation
-* Health-check API (`GET /api/health`)
-* Responsive layout (sidebar collapses on mobile, context panel hides below `xl`)
-
-## Planned Features
-
-* Incident memory
-* AI agent
-* Investigation tools
-* Simulated payment environment
-* Webhook replay
-* Incident timeline
-* Case memory
-* Safety/approval system
-* Evaluation framework
-
----
-
-## Getting started
-
-### 1. Backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-# edit .env and paste in your MongoDB Atlas connection string
-npm run dev
+```text
+Merchant
+   ↓
+Chat Interface
+   ↓
+Conversation API
+   ↓
+Memory Service
+   ↓
+Incident
+   ↓
+Transaction / Order / Webhook Data
+   ↓
+AI Agent
+   ↓
+Investigation + Resolution
 ```
 
-The server starts on `http://localhost:5000`. Visit
-`http://localhost:5000/api/health` — you should see:
+## 🎯 Main Use Case
 
-```json
-{ "success": true, "message": "ResolveAI backend is running" }
+### Scenario 1 — Payment / Order Mismatch
+
+Example:
+
+A customer successfully pays ₹5,000, but the merchant's order still shows as unpaid.
+
+ResolveAI can:
+
+1. Identify the incident.
+2. Retrieve the relevant conversation history.
+3. Identify the associated transaction.
+4. Check payment status.
+5. Check order status.
+6. Check webhook events.
+7. Identify the probable root cause.
+8. Perform a safe resolution such as webhook replay.
+9. Record the resolution in the incident timeline.
+
+## 💾 Conversation Memory
+
+ResolveAI maintains persistent conversation memory using MongoDB.
+
+Each conversation can contain:
+
+* Conversation ID
+* Merchant/User ID
+* Active incident
+* Message history
+* Incident association
+
+Example:
+
+```text
+CONV1001
+   ↓
+INC10291
+   ↓
+TXN1001
 ```
 
-The terminal should also print `MongoDB connected: <host>`.
+This allows a merchant to continue a conversation without repeatedly explaining the same problem.
 
-### 2. Frontend
+## 🔧 Technology Stack
 
-In a separate terminal:
+### Frontend
 
-```bash
-cd frontend
-npm install
-npm run dev
+* React
+* Vite
+
+### Backend
+
+* Node.js
+* Express.js
+
+### Database
+
+* MongoDB Atlas
+* Mongoose
+
+### Development
+
+* Git
+* GitHub
+* VS Code
+
+## 📂 Backend Structure
+
+```text
+backend/
+│
+├── config/
+│   └── db.js
+│
+├── controllers/
+│   └── healthController.js
+│
+├── models/
+│   ├── Transaction.js
+│   ├── Order.js
+│   ├── Event.js
+│   ├── Incident.js
+│   ├── Conversation.js
+│   └── Message.js
+│
+├── routes/
+│   ├── health.js
+│   ├── transactions.js
+│   ├── orders.js
+│   ├── webhooks.js
+│   ├── incidents.js
+│   ├── conversations.js
+│   └── chat.js
+│
+├── services/
+│   └── memoryService.js
+│
+├── seed.js
+├── server.js
+└── package.json
 ```
 
-Open `http://localhost:5173`. You should see the ResolveAI workspace UI, and
-the "System Ready" indicator in the top bar reflects whether it could reach
-the backend's health endpoint.
+## 🛠️ Planned Features
 
----
+* ⬜ AI Agent
+* ⬜ AI tool calling
+* ⬜ Investigation tools
+* ⬜ Safety and approval system
+* ⬜ Incident timeline
+* ⬜ ChatGPT-like frontend integration
+* ⬜ Scenario 2 — Payment deducted but merchant doesn't see it
+* ⬜ Scenario 3 — Settlement/KYC issue
+* ⬜ Evaluation framework
 
-## Setting up MongoDB Atlas
+## 🔐 Security
 
-1. Create a free account/cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas).
-2. Create a database user (Database Access) with a username and password.
-3. Under Network Access, allow your current IP (or `0.0.0.0/0` for local dev only).
-4. Click **Connect → Drivers**, copy the connection string, and put it in
-   `backend/.env` as `MONGODB_URI`, replacing `<username>` and `<password>`.
+Environment variables and API keys are stored in `.env` and should never be committed to GitHub.
 
-## Testing
+## 📌 Project Status
 
-**Backend**
-```bash
-cd backend
-npm run dev
-# check terminal for "MongoDB connected: ..."
-# curl http://localhost:5000/api/health
-```
+**Currently in active development.**
 
-**Frontend**
-```bash
-cd frontend
-npm run dev
-# check the browser console for errors
-# resize the window to confirm the layout is responsive
-```
+Backend incident management and persistent conversation memory are implemented. The next major milestone is connecting the AI agent to the investigation and resolution tools.
 
-## Common errors
+## 👩‍💻 Author
 
-| Symptom | Fix |
-|---|---|
-| `MONGODB_URI is not set` | Create `backend/.env` from `.env.example` and fill in your connection string. |
-| Mongoose connection error / timeout | Check Atlas Network Access allows your IP, and the username/password in the URI are correct. |
-| Frontend "System Ready" never turns green / CORS error in console | Make sure the backend is running on port 5000 and `frontend/.env` (if present) points `VITE_API_BASE_URL` at it. |
-| `EADDRINUSE` on backend start | Another process is already using port 5000 — change `PORT` in `.env` or stop the other process. |
-
-## Connecting to GitHub
-
-```bash
-git init          # if not already initialized
-git add .
-git commit -m "chore: initialize ResolveAI project"
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
-```
-
-## Phase 1 completion checklist
-
-- [x] React/Vite frontend runs
-- [x] Tailwind CSS works
-- [x] Distinctive ResolveAI incident-workspace UI (not a generic chatbot)
-- [x] Sidebar with recent cases
-- [x] Incident workspace + chat interface
-- [x] Investigation preview card (static)
-- [x] Memory preview card (static)
-- [x] Right-side context panel
-- [x] Express backend runs
-- [x] `GET /api/health` returns success
-- [x] MongoDB Atlas connection via Mongoose
-- [x] `.env` excluded from git
-- [x] Frontend never touches MongoDB directly
-- [x] README + PROJECT_SPEC.md
-- [x] Git initialized
-- [x] No AI/agent functionality added yet
-
-Next: **Phase 2 — Simulated payment backend.**
+Khushboo
