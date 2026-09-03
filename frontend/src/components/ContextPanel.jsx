@@ -51,7 +51,7 @@ export default function ContextPanel({ memory }) {
   )?.[1];
 
   return (
-    <aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-border bg-surface xl:block">
+   <aside className="w-72 shrink-0 overflow-y-auto border-l border-border bg-surface">
       <Section title="Incident">
         <Field
           label="ID"

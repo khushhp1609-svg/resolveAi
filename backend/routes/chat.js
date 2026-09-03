@@ -3,6 +3,9 @@ const router = express.Router();
 
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const Transaction = require("../models/Transaction");
+const Order = require("../models/Order");
+const Event = require("../models/Event");
 const {
   getConversationMemory
 } = require("../services/memoryService");
@@ -81,15 +84,64 @@ router.post("/", async (req, res) => {
     // Get updated memory
     const updatedMemory =
       await getConversationMemory(conversationId);
+      const incident = updatedMemory.activeIncident;
 
-    res.status(201).json({
-      success: true,
-      data: {
-        message: userMessage,
-        response: aiMessage,
-        memory: updatedMemory
-      }
-    });
+let investigation = null;
+
+if (incident?.transactionId) {
+  const transaction = await Transaction.findOne({
+    transactionId: incident.transactionId
+  }).lean();
+
+  const order = await Order.findOne({
+    transactionId: incident.transactionId
+  }).lean();
+
+  const webhook = await Event.findOne({
+    transactionId: incident.transactionId,
+    eventType: "PAYMENT_SUCCESS"
+  }).sort({ timestamp: -1 }).lean();
+
+  investigation = {
+    transaction: transaction
+      ? {
+          transactionId: transaction.transactionId,
+          status: transaction.status
+        }
+      : null,
+
+    order: order
+      ? {
+          orderId: order.orderId,
+          status: order.status
+        }
+      : null,
+
+    webhook: webhook
+      ? {
+          eventId: webhook.eventId,
+          status: webhook.status
+        }
+      : null,
+
+    resolution: {
+      status:
+        incident.status === "RESOLVED"
+          ? "RESOLVED"
+          : "PENDING"
+    }
+  };
+}
+
+  res.status(201).json({
+  success: true,
+  data: {
+    message: userMessage,
+    response: aiMessage,
+    memory: updatedMemory,
+    investigation
+  }
+});
 
   } catch (error) {
     console.error("AI Chat error:", error);

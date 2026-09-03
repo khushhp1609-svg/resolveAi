@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
@@ -7,20 +8,66 @@ import InvestigationCard from "../components/InvestigationCard";
 import MemoryCard from "../components/MemoryCard";
 import ChatInput from "../components/ChatInput";
 import ContextPanel from "../components/ContextPanel";
-import { sendChatMessage } from "../services/api";
+import { sendChatMessage, resetDemo } from "../services/api";
 
 export default function Workspace() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const [messages, setMessages] = useState([]);
-
   const [loading, setLoading] = useState(false);
-  const [investigation, setInvestigation] = useState(null);
+  const [investigation, setInvestigation] = useState({
+    transaction: {
+      transactionId: "TXN1001",
+      status: "SUCCESS",
+    },
+    order: {
+      orderId: "ORD1001",
+      status: "PENDING",
+    },
+    webhook: {
+      eventId: "EVT1001",
+      status: "FAILED",
+    },
+    resolution: {
+      status: "PENDING",
+    },
+  });
+
   const [incidentStatus, setIncidentStatus] = useState("Investigating");
   const [memory, setMemory] = useState(null);
 
   const conversationId = "CONV1001";
   const userId = "MERCHANT001";
+
+  const handleReset = async () => {
+    try {
+      const result = await resetDemo("TXN1001");
+
+      setMessages([]);
+      setMemory(null);
+      setLoading(false);
+      setIncidentStatus("Investigating");
+
+      setInvestigation({
+        transaction: {
+          transactionId: "TXN1001",
+          status: result.data?.transactionStatus || "SUCCESS",
+        },
+        order: {
+          orderId: "ORD1001",
+          status: result.data?.orderStatus || "PENDING",
+        },
+        webhook: {
+          eventId: "EVT1001",
+          status: result.data?.webhookStatus || "FAILED",
+        },
+        resolution: {
+          status: "PENDING",
+        },
+      });
+    } catch (error) {
+      console.error("Reset demo failed:", error);
+    }
+  };
 
   const handleSend = async (content) => {
     const merchantMessage = {
@@ -38,28 +85,22 @@ export default function Workspace() {
         userId,
         content,
       });
-setMemory(result?.data?.memory || null);
-      const aiResponse = result?.data?.response?.content;
+
+      setMemory(result?.data?.memory || null);
+
+      if (result?.data?.investigation) {
+        setInvestigation(result.data.investigation);
+      }
+
       if (result?.data?.memory?.activeIncident) {
-  setInvestigation({
-    transaction: {
-      transactionId:
-        result.data.memory.activeIncident.transactionId,
-      status: "SUCCESS",
-    },
-    order: {
-      status: "PAID",
-    },
-    webhook: {
-      status: "SUCCESS",
-    },
-  });
-  setIncidentStatus(
-  result.data.memory.activeIncident.status === "RESOLVED"
-    ? "Resolved"
-    : "Investigating"
-);
-}
+        setIncidentStatus(
+          result.data.memory.activeIncident.status === "RESOLVED"
+            ? "Resolved"
+            : "Investigating"
+        );
+      }
+
+      const aiResponse = result?.data?.response?.content;
 
       if (aiResponse) {
         setMessages((prev) => [
@@ -97,16 +138,21 @@ setMemory(result?.data?.memory || null);
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           onMenuClick={() => setSidebarOpen(true)}
+          onReset={handleReset}
         />
 
         <div className="flex min-h-0 flex-1">
           <div className="flex min-w-0 flex-1 flex-col">
-           <IncidentHeader
-  title="Payment / Order mismatch"
-  caseId="INC-10291"
-  tone={incidentStatus === "Resolved" ? "success" : "investigating"}
-  statusLabel={incidentStatus}
-/>
+            <IncidentHeader
+              title="Payment / Order mismatch"
+              caseId="INC-10291"
+              tone={
+                incidentStatus === "Resolved"
+                  ? "success"
+                  : "investigating"
+              }
+              statusLabel={incidentStatus}
+            />
 
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6 lg:px-8">
               {messages.map((message) => (
@@ -118,20 +164,22 @@ setMemory(result?.data?.memory || null);
                 </ChatMessage>
               ))}
 
-              <InvestigationCard investigation={investigation} />
+              <InvestigationCard
+                investigation={investigation}
+              />
 
               <MemoryCard memory={memory} />
 
-             {loading && (
-  <ChatMessage from="agent">
-    <div className="space-y-1">
-      <p>Investigating the incident...</p>
-      <p className="font-mono text-xs text-ink-soft">
-        Checking transaction → order → webhook
-      </p>
-    </div>
-  </ChatMessage>
-)}
+              {loading && (
+                <ChatMessage from="agent">
+                  <div className="space-y-1">
+                    <p>Investigating the incident...</p>
+                    <p className="font-mono text-xs text-ink-soft">
+                      Checking transaction → order → webhook
+                    </p>
+                  </div>
+                </ChatMessage>
+              )}
             </div>
 
             <ChatInput

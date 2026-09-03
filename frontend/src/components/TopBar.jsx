@@ -1,6 +1,6 @@
 import StatusBadge from "./StatusBadge";
 
-export default function TopBar({ onMenuClick }) {
+export default function TopBar({ onMenuClick, onReset })  {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-4 lg:px-6">
       <div className="flex items-center gap-3">
@@ -14,6 +14,13 @@ export default function TopBar({ onMenuClick }) {
             <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </button>
+        <button
+  type="button"
+  onClick={onReset}
+  className="rounded-md border border-border bg-surface px-3 py-1.5 font-mono text-xs font-medium text-ink-soft transition-colors hover:border-accent hover:text-ink"
+>
+  Reset Demo
+</button>
         <span className="font-display text-sm font-semibold text-ink">
           Merchant Workspace
         </span>

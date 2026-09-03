@@ -36,3 +36,22 @@ export async function sendChatMessage({
 
   return data;
 }
+export async function resetDemo(transactionId = "TXN1001") {
+  const res = await fetch(`${API_BASE_URL}/api/webhooks/reset-demo`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      transactionId,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to reset demo");
+  }
+
+  return data;
+}
