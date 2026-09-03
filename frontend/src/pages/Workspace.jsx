@@ -7,54 +7,140 @@ import InvestigationCard from "../components/InvestigationCard";
 import MemoryCard from "../components/MemoryCard";
 import ChatInput from "../components/ChatInput";
 import ContextPanel from "../components/ContextPanel";
+import { sendChatMessage } from "../services/api";
 
 export default function Workspace() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Local-only messages typed by the demo user. No backend call — the AI
-  // agent isn't connected until a later phase.
-  const [extraMessages, setExtraMessages] = useState([]);
+
+  const [messages, setMessages] = useState([]);
+
+  const [loading, setLoading] = useState(false);
+  const [investigation, setInvestigation] = useState(null);
+  const [incidentStatus, setIncidentStatus] = useState("Investigating");
+  const [memory, setMemory] = useState(null);
+
+  const conversationId = "CONV1001";
+  const userId = "MERCHANT001";
+
+  const handleSend = async (content) => {
+    const merchantMessage = {
+      id: Date.now(),
+      from: "merchant",
+      content,
+    };
+
+    setMessages((prev) => [...prev, merchantMessage]);
+    setLoading(true);
+
+    try {
+      const result = await sendChatMessage({
+        conversationId,
+        userId,
+        content,
+      });
+setMemory(result?.data?.memory || null);
+      const aiResponse = result?.data?.response?.content;
+      if (result?.data?.memory?.activeIncident) {
+  setInvestigation({
+    transaction: {
+      transactionId:
+        result.data.memory.activeIncident.transactionId,
+      status: "SUCCESS",
+    },
+    order: {
+      status: "PAID",
+    },
+    webhook: {
+      status: "SUCCESS",
+    },
+  });
+  setIncidentStatus(
+  result.data.memory.activeIncident.status === "RESOLVED"
+    ? "Resolved"
+    : "Investigating"
+);
+}
+
+      if (aiResponse) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            from: "agent",
+            content: aiResponse,
+          },
+        ]);
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          from: "agent",
+          content:
+            error.message ||
+            "Sorry, I couldn't process the incident right now.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        <TopBar
+          onMenuClick={() => setSidebarOpen(true)}
+        />
 
         <div className="flex min-h-0 flex-1">
           <div className="flex min-w-0 flex-1 flex-col">
-            <IncidentHeader
-              title="Payment / Order mismatch"
-              caseId="INC-10291"
-              tone="investigating"
-              statusLabel="Investigating"
-            />
+           <IncidentHeader
+  title="Payment / Order mismatch"
+  caseId="INC-10291"
+  tone={incidentStatus === "Resolved" ? "success" : "investigating"}
+  statusLabel={incidentStatus}
+/>
 
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6 lg:px-8">
-              <ChatMessage from="merchant">
-                ₹5,000 was deducted but my order still says unpaid.
-              </ChatMessage>
-
-              <ChatMessage from="agent">
-                I'll investigate this payment incident by checking the transaction, order
-                state, and payment events.
-              </ChatMessage>
-
-              <InvestigationCard />
-
-              <MemoryCard />
-
-              {extraMessages.map((msg, i) => (
-                <ChatMessage key={i} from="merchant">
-                  {msg}
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  from={message.from}
+                >
+                  {message.content}
                 </ChatMessage>
               ))}
+
+              <InvestigationCard investigation={investigation} />
+
+              <MemoryCard memory={memory} />
+
+             {loading && (
+  <ChatMessage from="agent">
+    <div className="space-y-1">
+      <p>Investigating the incident...</p>
+      <p className="font-mono text-xs text-ink-soft">
+        Checking transaction → order → webhook
+      </p>
+    </div>
+  </ChatMessage>
+)}
             </div>
 
-            <ChatInput onSend={(msg) => setExtraMessages((prev) => [...prev, msg])} />
+            <ChatInput
+              onSend={handleSend}
+              disabled={loading}
+            />
           </div>
 
-          <ContextPanel />
+          <ContextPanel memory={memory} />
         </div>
       </div>
     </div>

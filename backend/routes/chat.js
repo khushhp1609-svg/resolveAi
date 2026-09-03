@@ -3,9 +3,16 @@ const router = express.Router();
 
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
-const { getConversationMemory } = require("../services/memoryService");
+const {
+  getConversationMemory
+} = require("../services/memoryService");
 
-// Send a message and retrieve conversation memory
+const {
+  runResolveAIAgent
+} = require("../services/aiAgentService");
+
+
+// Send a message and run ResolveAI agent
 router.post("/", async (req, res) => {
   try {
     const {
@@ -14,11 +21,12 @@ router.post("/", async (req, res) => {
       content
     } = req.body;
 
-    // Validate required fields
+    // Validate request
     if (!conversationId || !userId || !content) {
       return res.status(400).json({
         success: false,
-        message: "conversationId, userId and content are required"
+        message:
+          "conversationId, userId and content are required"
       });
     }
 
@@ -34,8 +42,8 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Save the new user message
-    const message = await Message.create({
+    // Save merchant message
+    const userMessage = await Message.create({
       conversationId,
       userId,
       role: "user",
@@ -43,19 +51,48 @@ router.post("/", async (req, res) => {
       incidentId: conversation.activeIncidentId
     });
 
-    // Retrieve updated conversation memory
-    const memory = await getConversationMemory(conversationId);
+    // Get conversation memory
+    const memory = await getConversationMemory(
+      conversationId
+    );
+
+    // Run ResolveAI
+    const agentResult = await runResolveAIAgent({
+      userMessage: content,
+      memory
+    });
+
+    if (!agentResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: agentResult.error || "AI agent failed"
+      });
+    }
+
+    // Save AI response
+    const aiMessage = await Message.create({
+      conversationId,
+      userId,
+      role: "assistant",
+      content: agentResult.response,
+      incidentId: conversation.activeIncidentId
+    });
+
+    // Get updated memory
+    const updatedMemory =
+      await getConversationMemory(conversationId);
 
     res.status(201).json({
       success: true,
       data: {
-        message,
-        memory
+        message: userMessage,
+        response: aiMessage,
+        memory: updatedMemory
       }
     });
 
   } catch (error) {
-    console.error("Chat error:", error);
+    console.error("AI Chat error:", error);
 
     res.status(500).json({
       success: false,
