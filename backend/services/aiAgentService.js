@@ -348,7 +348,7 @@ if (canReplayWebhook && actionResult?.success) {
       (event) =>
         event.eventType === "PAYMENT_SUCCESS" &&
         event.status === "SUCCESS" &&
-        event.replayed === true
+      event.metadata?.replayed === true
     );
 
   if (
