@@ -15,7 +15,10 @@ const chatRoutes = require("./routes/chat");
 
 // Only allow the local Vite dev server for now. Widen this deliberately in
 // a later phase when there's a real deployed frontend origin to allow.
-const allowedOrigins = ["http://localhost:5173"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://resolve-ai-three-brown.vercel.app",
+];
 app.use(
   cors({
     origin: allowedOrigins,
