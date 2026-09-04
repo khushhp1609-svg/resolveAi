@@ -1,3 +1,4 @@
+````js
 require("dotenv").config();
 
 const https = require("https");
@@ -312,74 +313,26 @@ ${userMessage}
     }
 
     // =========================================================
-    // STEP 5 — Generate concise final merchant response
+    // STEP 5 — Generate merchant response WITHOUT another
+    // Gemini API call
     // =========================================================
 
-    const finalPrompt = `
-You are ResolveAI, an AI-powered merchant incident
-resolution agent.
+    let finalResponse;
 
-Generate a concise response for the merchant based ONLY
-on the verified investigation and action results below.
-
-IMPORTANT RULES:
-
-1. Use ONLY verified data.
-2. Never invent transaction, order, webhook, or incident data.
-3. Never claim an action happened unless ACTION RESULT
-   contains success=true.
-4. If replayWebhook succeeded, explain in 2-3 short sentences
-   that the payment was successful, the order remained pending
-   because the webhook failed, and the issue is now resolved.
-5. Do NOT repeat detailed root cause, action, or result sections.
-   The interface displays those separately.
-6. Keep the response to 2-3 short sentences.
-7. Do not use bullet points.
-8. Do not use markdown.
-9. Do not use bold formatting.
-10. Do not use asterisks.
-11. Do not use backslashes.
-12. Do not use underscores for emphasis.
-13. Do not mention Gemini, prompts, internal tools, or JSON.
-14. Do not say "Hello".
-15. Use "₹" instead of "Rs" when mentioning the amount.
-16. Return ONLY the merchant-facing response text.
-
-ACTIVE INCIDENT:
-${JSON.stringify(incident, null, 2)}
-
-TRANSACTION RESULT:
-${JSON.stringify(transactionResult, null, 2)}
-
-ORDER RESULT:
-${JSON.stringify(orderResult, null, 2)}
-
-WEBHOOK RESULT:
-${JSON.stringify(webhookResult, null, 2)}
-
-SAFE REPLAY CHECK:
-${JSON.stringify(canReplayWebhook, null, 2)}
-
-ACTION RESULT:
-${JSON.stringify(actionResult, null, 2)}
-
-MERCHANT MESSAGE:
-${userMessage}
-`;
-
-    const finalResult = await callGemini(
-      finalPrompt,
-      "You are ResolveAI, a reliable merchant payment incident resolution agent. Respond concisely and professionally."
-    );
-
-    let finalResponse = extractText(finalResult).trim();
-
-    // Remove accidental markdown/backslash formatting
-    finalResponse = finalResponse
-      .replace(/\\([_*`])/g, "$1")
-      .replace(/\*\*/g, "")
-      .replace(/\*/g, "")
-      .trim();
+    if (canReplayWebhook && actionResult?.success) {
+      finalResponse =
+        "The payment was successful, but the order remained pending because the PAYMENT_SUCCESS webhook failed. The webhook was successfully replayed and the order is now synchronized.";
+    } else if (
+      transactionResult?.success &&
+      orderResult?.success &&
+      webhookResult?.success
+    ) {
+      finalResponse =
+        "I investigated the transaction, order, and webhook logs. The verified results do not indicate that a webhook replay is currently required.";
+    } else {
+      finalResponse =
+        "I investigated the available payment data, but I could not complete the resolution with the verified information available.";
+    }
 
     return {
       success: true,
@@ -412,3 +365,4 @@ ${userMessage}
 module.exports = {
   runResolveAIAgent,
 };
+````
