@@ -326,20 +326,46 @@ ${userMessage}
 
     let finalResponse;
 
-    if (canReplayWebhook && actionResult?.success) {
-      finalResponse =
-        "The payment was successful, but the order remained pending because the PAYMENT_SUCCESS webhook failed. The webhook was successfully replayed and the order is now synchronized.";
-    } else if (
-      transactionResult?.success &&
-      orderResult?.success &&
-      webhookResult?.success
-    ) {
-      finalResponse =
-        "I investigated the transaction, order, and webhook logs. The verified results do not indicate that a webhook replay is currently required.";
-    } else {
-      finalResponse =
-        "I investigated the available payment data, but I could not complete the resolution with the verified information available.";
-    }
+if (canReplayWebhook && actionResult?.success) {
+  finalResponse =
+    "The payment was successful, but the order remained pending because the PAYMENT_SUCCESS webhook failed. The webhook was successfully replayed and the order is now synchronized.";
+} else if (
+  transactionResult?.success &&
+  orderResult?.success &&
+  webhookResult?.success
+) {
+  const transactionStatus =
+    transactionResult.data?.status;
+
+  const orderStatus =
+    orderResult.data?.status;
+
+  const webhookEvents =
+    webhookResult.data || [];
+
+  const replayedPaymentSuccessWebhook =
+    webhookEvents.find(
+      (event) =>
+        event.eventType === "PAYMENT_SUCCESS" &&
+        event.status === "SUCCESS" &&
+        event.replayed === true
+    );
+
+  if (
+    transactionStatus === "SUCCESS" &&
+    orderStatus === "PAID" &&
+    replayedPaymentSuccessWebhook
+  ) {
+    finalResponse =
+      "This incident was previously resolved. The payment was successful, the PAYMENT_SUCCESS webhook initially failed, and the webhook was successfully replayed. The order is now synchronized to PAID.";
+  } else {
+    finalResponse =
+      "I investigated the transaction, order, and webhook logs. The verified results do not indicate that a webhook replay is currently required.";
+  }
+} else {
+  finalResponse =
+    "I investigated the available payment data, but I could not complete the resolution with the verified information available.";
+}
 
     return {
       success: true,
