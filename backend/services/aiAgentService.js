@@ -175,28 +175,35 @@ MERCHANT MESSAGE:
 ${userMessage}
 `;
 
-      const decisionResult = await callGemini(
-        decisionPrompt,
-        "You are ResolveAI's internal investigation decision engine."
-      );
+      try {
+  const decisionResult = await callGemini(
+    decisionPrompt,
+    "You are ResolveAI's internal investigation decision engine."
+  );
 
-      const decisionText = extractText(decisionResult).trim();
+  const decisionText = extractText(decisionResult).trim();
 
-      console.log("Gemini decision:", decisionText);
+  console.log("Gemini decision:", decisionText);
 
-      const parsedDecision = parseJson(decisionText);
+  const parsedDecision = parseJson(decisionText);
 
-      if (parsedDecision) {
-        decision = {
-          transactionId,
-          needTransaction:
-            parsedDecision.needTransaction === true,
-          needOrder:
-            parsedDecision.needOrder === true,
-          needWebhook:
-            parsedDecision.needWebhook === true,
-        };
-      }
+  if (parsedDecision) {
+    decision = {
+      transactionId,
+      needTransaction:
+        parsedDecision.needTransaction === true,
+      needOrder:
+        parsedDecision.needOrder === true,
+      needWebhook:
+        parsedDecision.needWebhook === true,
+    };
+  }
+} catch (geminiError) {
+  console.warn(
+    "Gemini unavailable. Using deterministic investigation fallback:",
+    geminiError.message
+  );
+}
     }
 
     console.log(
