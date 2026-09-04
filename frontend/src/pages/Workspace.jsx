@@ -102,16 +102,35 @@ export default function Workspace() {
 
       const aiResponse = result?.data?.response?.content;
 
-      if (aiResponse) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now() + 1,
-            from: "agent",
-            content: aiResponse,
-          },
-        ]);
-      }
+     if (aiResponse) {
+  const investigationData = result?.data?.investigation;
+
+  const resolved =
+    investigationData?.order?.status === "PAID" &&
+    investigationData?.webhook?.status === "SUCCESS";
+
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: Date.now() + 1,
+      from: "agent",
+      content: aiResponse,
+
+      resolution: resolved
+        ? {
+            rootCause:
+              "Merchant endpoint timeout caused the PAYMENT_SUCCESS webhook to fail.",
+
+            action:
+              "Failed PAYMENT_SUCCESS webhook was replayed.",
+
+            result:
+              "Order synchronized to PAID. Incident resolved.",
+          }
+        : null,
+    },
+  ]);
+}
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -157,11 +176,12 @@ export default function Workspace() {
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6 lg:px-8">
               {messages.map((message) => (
                 <ChatMessage
-                  key={message.id}
-                  from={message.from}
-                >
-                  {message.content}
-                </ChatMessage>
+  key={message.id}
+  from={message.from}
+  resolution={message.resolution}
+>
+  {message.content}
+</ChatMessage>
               ))}
 
               <InvestigationCard

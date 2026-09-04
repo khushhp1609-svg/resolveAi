@@ -115,15 +115,6 @@ async function runResolveAIAgent({ userMessage, memory }) {
     // STEP 1 — Determine investigation
     // =========================================================
 
-    /*
-      IMPORTANT:
-
-      The incident's transactionId is authoritative.
-
-      We do not allow old conversation history to change
-      the transaction being investigated.
-    */
-
     const transactionId = incident.transactionId;
 
     if (!transactionId) {
@@ -144,10 +135,7 @@ async function runResolveAIAgent({ userMessage, memory }) {
 
     /*
       For PAYMENT_ORDER_MISMATCH incidents, all three
-      investigation tools are always required.
-
-      Gemini is still used later for reasoning and response
-      generation, but critical investigation is deterministic.
+      investigation tools are required.
     */
 
     if (incident.type !== "PAYMENT_ORDER_MISMATCH") {
@@ -200,9 +188,12 @@ ${userMessage}
       if (parsedDecision) {
         decision = {
           transactionId,
-          needTransaction: parsedDecision.needTransaction === true,
-          needOrder: parsedDecision.needOrder === true,
-          needWebhook: parsedDecision.needWebhook === true,
+          needTransaction:
+            parsedDecision.needTransaction === true,
+          needOrder:
+            parsedDecision.needOrder === true,
+          needWebhook:
+            parsedDecision.needWebhook === true,
         };
       }
     }
@@ -266,13 +257,6 @@ ${userMessage}
     // STEP 3 — Deterministic SAFE ACTION check
     // =========================================================
 
-    /*
-      Gemini should NOT be trusted as the final safety gate.
-
-      The backend verifies the actual database results before
-      allowing replayWebhook() to execute.
-    */
-
     let canReplayWebhook = false;
 
     if (
@@ -328,31 +312,38 @@ ${userMessage}
     }
 
     // =========================================================
-    // STEP 5 — Generate final merchant response
+    // STEP 5 — Generate concise final merchant response
     // =========================================================
 
     const finalPrompt = `
 You are ResolveAI, an AI-powered merchant incident
 resolution agent.
 
-Explain the verified result to the merchant.
+Generate a concise response for the merchant based ONLY
+on the verified investigation and action results below.
 
 IMPORTANT RULES:
 
-1. Use ONLY the verified data provided below.
+1. Use ONLY verified data.
 2. Never invent transaction, order, webhook, or incident data.
 3. Never claim an action happened unless ACTION RESULT
    contains success=true.
-4. If replayWebhook succeeded:
-   - say the failed webhook was replayed
-   - say the order was synchronized to PAID
-   - say the incident was resolved
-5. If replayWebhook failed:
-   - clearly say the action could not be completed
-6. If no action was performed:
-   - do not claim that an action was performed
-7. Keep the response concise and professional.
-8. Do not mention Gemini, prompts, internal tools, or JSON.
+4. If replayWebhook succeeded, explain in 2-3 short sentences
+   that the payment was successful, the order remained pending
+   because the webhook failed, and the issue is now resolved.
+5. Do NOT repeat detailed root cause, action, or result sections.
+   The interface displays those separately.
+6. Keep the response to 2-3 short sentences.
+7. Do not use bullet points.
+8. Do not use markdown.
+9. Do not use bold formatting.
+10. Do not use asterisks.
+11. Do not use backslashes.
+12. Do not use underscores for emphasis.
+13. Do not mention Gemini, prompts, internal tools, or JSON.
+14. Do not say "Hello".
+15. Use "₹" instead of "Rs" when mentioning the amount.
+16. Return ONLY the merchant-facing response text.
 
 ACTIVE INCIDENT:
 ${JSON.stringify(incident, null, 2)}
@@ -378,10 +369,17 @@ ${userMessage}
 
     const finalResult = await callGemini(
       finalPrompt,
-      "You are ResolveAI, a reliable merchant payment incident resolution agent."
+      "You are ResolveAI, a reliable merchant payment incident resolution agent. Respond concisely and professionally."
     );
 
-    const finalResponse = extractText(finalResult);
+    let finalResponse = extractText(finalResult).trim();
+
+    // Remove accidental markdown/backslash formatting
+    finalResponse = finalResponse
+      .replace(/\\([_*`])/g, "$1")
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .trim();
 
     return {
       success: true,
