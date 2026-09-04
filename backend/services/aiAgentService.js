@@ -1,4 +1,4 @@
-````js
+
 require("dotenv").config();
 
 const https = require("https");
@@ -372,4 +372,4 @@ ${userMessage}
 module.exports = {
   runResolveAIAgent,
 };
-````
+
