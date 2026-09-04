@@ -22,18 +22,19 @@ async function getWebhookLogs(transactionId) {
         message: `No webhook events found for transaction ${transactionId}`
       };
     }
-
-    return {
-      success: true,
-      data: events.map((event) => ({
-        eventId: event.eventId,
-        transactionId: event.transactionId,
-        eventType: event.eventType,
-        status: event.status,
-        timestamp: event.timestamp,
-        metadata: event.metadata
-      }))
-    };
+return {
+  success: true,
+  data: events.map((event) => ({
+    eventId: event.eventId,
+    transactionId: event.transactionId,
+    eventType: event.eventType,
+    status: event.status,
+    timestamp: event.timestamp,
+    metadata: event.metadata,
+    replayed: event.replayed,
+    replayedAt: event.replayedAt
+  }))
+};
 
   } catch (error) {
     console.error("getWebhookLogs tool error:", error);
