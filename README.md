@@ -1,239 +1,294 @@
-🚀 ResolveAI
+ResolveAI — AI-Powered Merchant Incident Resolution Agent
 
-AI-Powered Merchant Incident Resolution Agent
+«ResolveAI is an AI-powered merchant support agent that investigates payment incidents, identifies probable root causes, performs safe recovery actions, and remembers previous resolutions.»
 
-«Don't just answer merchant problems. Investigate them, resolve them, and remember what happened.»
+🚀 Try ResolveAI
 
-ResolveAI is an AI-powered merchant support agent designed to investigate and resolve payment-related incidents.
+Live Project: https://resolve-ai-three-brown.vercel.app/
 
-Instead of simply responding to a merchant's question, ResolveAI investigates the underlying payment systems, identifies the probable root cause, performs safe actions when possible, verifies the result, and stores the resolution as incident memory for future conversations.
+Backend Health: https://resolveai-1-lrp2.onrender.com/api/health
 
----
-
-🎯 The Problem
-
-Payment issues often require merchants or support teams to manually check multiple systems:
-
-Merchant reports an issue
-
-↓
-
-Check Transaction
-
-↓
-
-Check Order
-
-↓
-
-Check Webhook Logs
-
-↓
-
-Identify Root Cause
-
-↓
-
-Take Action
-
-↓
-
-Verify Resolution
-
-This process is time-consuming and requires switching between multiple systems.
-
-ResolveAI turns this into:
-
-Merchant → AI Agent → Investigation → Root Cause → Safe Action → Verification → Memory
+GitHub Repository: https://github.com/khushhp1609-svg/resolveAi
 
 ---
 
-💡 What ResolveAI Does
+💡 Problem
+
+Payment failures and mismatches create significant support overhead for merchants.
+
+A merchant may know that:
+
+- A customer paid successfully
+- The order still shows as unpaid
+- A webhook failed
+- The payment status and order status don't match
+
+Normally, resolving this requires checking multiple systems manually.
+
+ResolveAI brings investigation, diagnosis, recovery, and incident memory into one AI-powered workflow.
+
+---
+
+🤖 What ResolveAI Does
+
+A merchant can simply describe the problem in natural language.
+
+For example:
+
+«"Customer paid ₹5,000 but the order is still showing unpaid."»
 
 ResolveAI can:
 
-- 🔍 Investigate payment incidents
-- 💳 Retrieve and analyze transaction information
-- 📦 Compare payment and order states
-- 🪝 Inspect webhook events and failures
-- 🧠 Identify probable root causes
-- ⚡ Execute safe recovery actions
-- ✅ Verify whether the issue was resolved
-- 🧠 Remember previous incidents and resolutions
-- 🚨 Escalate when an issue cannot be safely resolved
+1. Understand the merchant's issue
+2. Identify the relevant transaction
+3. Check the payment status
+4. Check the order status
+5. Investigate webhook events
+6. Identify the probable root cause
+7. Perform a safe recovery action when allowed
+8. Verify the result
+9. Mark the incident as resolved
+10. Store the incident in memory for future context
 
 ---
 
 ⭐ Core Demo Scenario
 
-Payment Successful — Order Still Unpaid
+Payment Successful → Order Still Unpaid
 
-A merchant says:
+Initial state:
 
-«"The customer paid ₹5,000, but the order is still showing unpaid."»
+Customer Payment
+      ↓
+₹5,000
+      ↓
+Payment: SUCCESS
+      ↓
+Order: UNPAID
+      ↓
+PAYMENT_SUCCESS Webhook: FAILED
 
-ResolveAI investigates the incident instead of immediately giving a generic response.
+ResolveAI Investigation
 
-Step 1 — Investigate Transaction
+Merchant reports issue
+        ↓
+AI understands incident
+        ↓
+Get Transaction
+        ↓
+Get Order
+        ↓
+Check Webhook Logs
+        ↓
+Identify Root Cause
+        ↓
+Replay Failed Webhook
+        ↓
+Verify Webhook Success
+        ↓
+Verify Order = PAID
+        ↓
+Incident RESOLVED
 
-Transaction
-Status: SUCCESS
-Amount: ₹5,000
+Root Cause
 
-Step 2 — Check Order
+The payment was successful, but the "PAYMENT_SUCCESS" webhook failed because the merchant endpoint timed out.
 
-Order
-Status: UNPAID
-
-Step 3 — Check Webhook
-
-Webhook
-Status: FAILED
-Event: payment.captured
-
-Step 4 — Identify Root Cause
-
-⚠ Root Cause Detected
-
-Payment succeeded, but the payment webhook
-failed to update the merchant order.
-
-Step 5 — Take Safe Action
-
-⚡ Action
-
-Replay failed webhook
-
-Step 6 — Verify
-
-✓ Webhook delivered
-✓ Order synchronized
-✓ Incident resolved
-
-Step 7 — Remember
-
-The resolution is stored as structured incident memory so that ResolveAI can use it in future conversations.
+ResolveAI identifies the mismatch and safely replays the failed webhook.
 
 ---
 
-🧠 Why Memory Matters
+🧠 AI Agent
 
-Traditional chatbots primarily rely on conversation history.
+ResolveAI uses Gemini Flash as its reasoning layer.
 
-ResolveAI introduces an incident-based memory layer.
+The AI agent can work with backend investigation and action tools such as:
 
-Instead of storing only:
+- "getTransaction()"
+- "getOrder()"
+- "getWebhookLogs()"
+- "replayWebhook()"
 
-Merchant: What happened to my payment?
-AI: ...
+The backend remains responsible for validating whether an action is actually safe to execute.
 
-ResolveAI stores meaningful resolution information:
+This separates:
 
-Incident:
-Payment/Order mismatch
+AI reasoning → Tool execution → Business validation → Database state
 
-Root Cause:
-Failed payment webhook
-
-Action:
-Webhook replayed
-
-Result:
-Order synchronized successfully
-
-This allows the system to retrieve relevant past incidents without sending the entire conversation history to the model every time.
-
----
-
-🤖 AI Agent Architecture
-
-                    ┌──────────────────┐
-                    │     Merchant     │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │   ResolveAI      │
-                    │    AI Agent      │
-                    └────────┬─────────┘
-                             │
-             ┌───────────────┼────────────────┐
-             ▼               ▼                ▼
-      Transaction Tool   Order Tool     Webhook Tool
-             │               │                │
-             └───────────────┼────────────────┘
-                             ▼
-                    ┌──────────────────┐
-                    │ Incident Engine  │
-                    │ & Root Cause     │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │  Safety Checks   │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │ Safe Action /    │
-                    │ Human Escalation │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │    Verification  │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                    ┌──────────────────┐
-                    │ Incident Memory │
-                    └──────────────────┘
+The AI does not directly modify critical payment state.
 
 ---
 
 🛡️ Safety First
 
-Payment-related actions should never be executed blindly.
+Payment-related actions should never depend blindly on an AI response.
 
-ResolveAI separates investigation from action.
+Before replaying a webhook, ResolveAI validates conditions such as:
 
-Before an action such as webhook replay is performed, the backend validates the relevant state.
+- Transaction exists
+- Transaction status is "SUCCESS"
+- Order exists
+- Order is not already "PAID"
+- A failed "PAYMENT_SUCCESS" webhook exists
+- The requested recovery action is valid
 
-Example
+The database remains the source of truth.
 
-Transaction = SUCCESS
-Order = UNPAID
-Webhook = FAILED
-        ↓
-Action permitted
-        ↓
-Replay webhook
-        ↓
-Verify result
-
-If the required conditions are not satisfied, the system does not blindly execute the action.
-
-Instead, it can escalate the incident for human intervention.
+This prevents the AI from arbitrarily changing critical payment states.
 
 ---
 
-🔥 Supported Incident Scenarios
+🧠 Incident Memory
 
-1. Payment / Order Mismatch ⭐
+ResolveAI doesn't treat every conversation as completely independent.
 
-Payment = SUCCESS
-Order = UNPAID
-Webhook = FAILED
+It stores structured incident information including:
 
-ResolveAI identifies the failed webhook and can simulate a webhook replay.
+- Conversation
+- Messages
+- Incident status
+- Root cause
+- Resolution
+- Related transaction
+- Related order
+- Resolution history
 
-2. Payment Deducted but Merchant Doesn't See It
+Instead of repeatedly sending an entire conversation history to the AI, the memory layer can provide relevant structured context.
 
-The agent investigates the transaction state and related events to determine the probable cause.
+Example
 
-3. Settlement / KYC Issue
+Previous Incident
+      ↓
+Payment successful
+      ↓
+Webhook failed
+      ↓
+Webhook replayed
+      ↓
+Order updated
+      ↓
+Resolved
 
-The system can investigate settlement or verification-related incidents and determine whether further action or escalation is required.
+This creates the foundation for a merchant support agent that can become more context-aware over time.
+
+---
+
+🏗️ Architecture
+
+                    Merchant
+                       │
+                       ▼
+                React Frontend
+                       │
+                       ▼
+                Express Backend
+                       │
+              ┌────────┴────────┐
+              ▼                 ▼
+         AI Agent          Memory Layer
+        Gemini Flash       Incident Context
+              │
+              ▼
+        Investigation Tools
+              │
+       ┌──────┼────────┐
+       ▼      ▼        ▼
+ Transaction Order   Webhooks
+       │      │        │
+       └──────┼────────┘
+              ▼
+        Safety Validation
+              │
+              ▼
+        Recovery Action
+              │
+              ▼
+          MongoDB
+
+---
+
+🔄 End-to-End Flow
+
+Merchant Message
+       ↓
+Understand Incident
+       ↓
+Identify Relevant Data
+       ↓
+Investigate Transaction
+       ↓
+Investigate Order
+       ↓
+Inspect Webhooks
+       ↓
+Determine Root Cause
+       ↓
+Validate Recovery Action
+       ↓
+Execute Safe Action
+       ↓
+Verify Result
+       ↓
+Update Incident
+       ↓
+Store Memory
+
+---
+
+🎯 Supported / Planned Incident Types
+
+Current MVP
+
+Payment / Order Mismatch
+
+Example:
+
+«Payment is successful but order is unpaid.»
+
+Planned Extensions
+
+- Payment deducted but merchant doesn't see it
+- Settlement issues
+- KYC-related issues
+- Additional webhook failures
+- Automated incident escalation
+- More merchant support workflows
+
+---
+
+🖥️ Frontend
+
+The frontend provides a ChatGPT-style merchant support interface where users can:
+
+- Describe payment issues
+- Interact with ResolveAI
+- Receive investigation results
+- View resolution status
+- Continue conversations
+- Maintain incident context
+
+Built using:
+
+- React
+- Vite
+- Tailwind CSS
+- JavaScript
+
+---
+
+🗄️ Data Model
+
+ResolveAI uses MongoDB with collections/models including:
+
+Users
+Conversations
+Messages
+Incidents
+Transactions
+Orders
+Events
+
+This structure separates conversational data from payment and incident data.
 
 ---
 
@@ -250,21 +305,22 @@ Backend
 
 - Node.js
 - Express.js
+- REST APIs
+
+AI
+
+- Google Gemini / Gemini Flash
 
 Database
 
 - MongoDB Atlas
+- Mongoose
 
-AI
+Deployment
 
-- Google Gemini
-
-Other
-
-- REST APIs
-- Git / GitHub
 - Vercel
 - Render
+- MongoDB Atlas
 
 ---
 
@@ -272,225 +328,149 @@ Other
 
 resolveAi/
 │
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── ...
-│   └── ...
-│
 ├── backend/
+│   ├── config/
+│   ├── models/
+│   ├── routes/
 │   ├── services/
 │   │   ├── aiAgentService.js
-│   │   ├── memoryService.js
-│   │   └── ...
-│   │
+│   │   └── memoryService.js
 │   ├── tools/
 │   │   ├── transactionTool.js
 │   │   ├── orderTool.js
 │   │   ├── webhookTool.js
 │   │   └── replayWebhookTool.js
-│   │
-│   ├── models/
-│   ├── routes/
 │   └── server.js
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── services/
+│   └── ...
 │
 └── README.md
 
 ---
 
-🔄 Example Agent Flow
-
-Merchant:
-"Customer paid but my order is still unpaid."
-
-                ↓
-
-        ResolveAI receives request
-
-                ↓
-
-       Identify payment incident
-
-                ↓
-
-        Get transaction details
-
-                ↓
-
-          Get order details
-
-                ↓
-
-         Inspect webhook logs
-
-                ↓
-
-         Correlate the evidence
-
-                ↓
-
-         Identify root cause
-
-                ↓
-
-       Validate action safety
-
-                ↓
-
-          Replay webhook
-
-                ↓
-
-          Verify new state
-
-                ↓
-
-         Mark incident resolved
-
-                ↓
-
-       Store incident memory
-
----
-
-🧪 Running Locally
+🚀 Run Locally
 
 1. Clone the repository
 
 git clone https://github.com/khushhp1609-svg/resolveAi.git
-
 cd resolveAi
 
-2. Install dependencies
-
-Backend
+2. Start Backend
 
 cd backend
 npm install
-
-Frontend
-
-cd ../frontend
-npm install
-
-3. Configure environment variables
-
-Create the required ".env" files for the backend and frontend.
-
-Example:
-
-MONGODB_URI=your_mongodb_connection_string
-GEMINI_API_KEY=your_gemini_api_key
-PORT=5000
-
-Never commit API keys or environment files to GitHub.
-
-4. Start the backend
-
-cd backend
 npm run dev
 
-5. Start the frontend
+3. Start Frontend
+
+Open another terminal:
 
 cd frontend
+npm install
 npm run dev
 
----
-
-🌐 Deployment
-
-ResolveAI is deployed as an MVP using:
-
-- Frontend: Vercel
-- Backend: Render
-- Database: MongoDB Atlas
-
-«The payment infrastructure in this project is simulated for demonstration purposes.»
+Then open the local frontend URL shown by Vite.
 
 ---
 
-📊 What Makes ResolveAI Different?
+🧪 Demo
 
-Traditional Support
+To test the main workflow:
 
-Merchant
-   ↓
-Support Ticket
-   ↓
-Human Investigation
-   ↓
-Multiple Systems
-   ↓
-Engineering / Operations
-   ↓
-Resolution
+1. Open the live ResolveAI application
+2. Enter:
 
-ResolveAI
+Customer paid ₹5000 but the order is still unpaid.
 
-Merchant
-   ↓
-ResolveAI
-   ↓
-Investigates Multiple Systems
-   ↓
-Finds Root Cause
-   ↓
-Safe Automated Action
-   ↓
-Verification
-   ↓
-Incident Memory
-
-The goal isn't to replace human support.
-
-The goal is to automate investigation and resolution of repetitive, well-understood incidents while escalating uncertain or risky cases to humans.
+3. Let ResolveAI investigate the incident
+4. Review the transaction and order information
+5. Review the webhook failure
+6. Observe the identified root cause
+7. Trigger the safe webhook replay
+8. Verify the updated order status
+9. Observe the incident being resolved
+10. Continue the conversation to demonstrate retained context
 
 ---
 
-🚀 Future Scope
+🔐 Security & Reliability Principles
 
-ResolveAI can be extended with:
+ResolveAI follows a few important principles:
 
-- Real payment gateway integrations
-- More incident types
-- Advanced root-cause detection
-- Merchant-specific memory
-- Confidence scoring
-- Human-in-the-loop approvals
-- Detailed audit trails
-- Role-based permissions
+- AI does not directly control critical payment state
+- Backend validates recovery actions
+- Database is the source of truth
+- Recovery actions require verified conditions
+- Investigation and execution are separated
+- Incidents are recorded for traceability
+
+---
+
+📌 Implementation Status
+
+Feature| Status
+Merchant Chat Interface| ✅
+AI Reasoning| ✅
+Transaction Investigation| ✅
+Order Investigation| ✅
+Webhook Investigation| ✅
+Safe Webhook Replay| ✅
+Incident Memory| ✅
+Root Cause Detection| ✅
+End-to-End Demo| ✅
+Live MVP Deployment| ✅
+
+---
+
+🌱 Future Scope
+
+ResolveAI can be extended into a broader merchant operations agent with:
+
+- More payment incident types
 - Automated incident prioritization
-- Analytics for recurring merchant issues
+- Merchant-specific memory
+- Multi-step autonomous investigations
+- Human escalation
+- Advanced observability
+- Real payment gateway integrations
+- Analytics and incident dashboards
+- Proactive detection of recurring payment issues
 
 ---
 
-🎥 Demo
+🎯 Why ResolveAI?
 
-Demo Video:
-Add your pitch/demo video link here
+Traditional payment support often requires merchants or support teams to manually:
 
-Live Application:
-Add your deployed application URL here
+Find → Check → Investigate → Diagnose → Fix → Verify
+
+ResolveAI aims to turn that into:
+
+Ask → Investigate → Diagnose → Safely Resolve → Remember
+
+The goal is not simply to build another chatbot.
+
+It is to build an AI-powered incident resolution agent that can reason over payment data, use investigation tools, perform controlled recovery actions, verify the outcome, and maintain incident memory.
 
 ---
 
-👨‍💻 Built For
+⚠️ Disclaimer
 
-Razorpay AI Buildathon 2026
+This project is an MVP / hackathon prototype demonstrating an AI-assisted merchant incident resolution workflow using simulated payment infrastructure. It is not intended to process real customer payments or production financial data.
 
-Project
+---
+
+👩‍💻 Author
+
+Khushboo
+
+B.Tech Computer Science Engineering
 
 ResolveAI — AI-Powered Merchant Incident Resolution Agent
 
-One-line summary
-
-«ResolveAI turns merchant payment support from a ticket-based process into an intelligent investigation and resolution workflow.»
-
----
-
-📜 Disclaimer
-
-ResolveAI is a hackathon MVP created for demonstration purposes.
-
-Payment transactions, webhook events, and recovery actions are simulated and should not be treated as real financial operations.
+«From payment problem to verified resolution.»
